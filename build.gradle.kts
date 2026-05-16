@@ -21,6 +21,13 @@ dependencies {
 	implementation("org.springframework.boot:spring-boot-starter-actuator")
 	implementation("org.springframework.boot:spring-boot-starter-data-jpa")
 	implementation("org.springframework.boot:spring-boot-starter-webmvc")
+
+	implementation("org.apache.lucene:lucene-core:9.10.0")
+
+	implementation("org.apache.lucene:lucene-queryparser:9.10.0")
+
+	implementation("org.apache.lucene:lucene-analysis-common:9.10.0")
+
 	compileOnly("org.projectlombok:lombok")
 	runtimeOnly("org.postgresql:postgresql")
 	annotationProcessor("org.projectlombok:lombok")
