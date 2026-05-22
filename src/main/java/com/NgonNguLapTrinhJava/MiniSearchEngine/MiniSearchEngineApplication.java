@@ -24,30 +24,26 @@ public class MiniSearchEngineApplication {
         return args -> {
 
             System.out.println("========== BUILD INDEX ==========");
-            String indexPath = "output/index";
+            String indexPath = "lucene-index";
 
-            Indexer indexer = new Indexer();
+            Indexer loadedIndexer = new Indexer();
 
             if (!IndexPersistence.indexExists(indexPath)) {
 
                 System.out.println("Index not found. Building...");
 
-                indexer.buildFromDirectory("data/");
-                indexer.saveIndex(indexPath);
+                loadedIndexer.buildFromDirectory("data/");
+                loadedIndexer.saveIndex(indexPath);
 
             } else {
 
                 System.out.println("Index already exists. Loading...");
 
-                indexer.loadIndex(indexPath);
+                loadedIndexer.loadIndex(indexPath);
             }
 
             System.out.println("Ready.");
-            System.out.println("\n========== LOAD INDEX TEST ==========");
-
-            // Giả lập restart app
-            Indexer loadedIndexer = new Indexer();
-            loadedIndexer.loadIndex("output/index");
+           
 
             System.out.println("\n========== ANALYZE QUERY TEST ==========");
 
