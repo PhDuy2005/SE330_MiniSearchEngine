@@ -1,5 +1,6 @@
 package com.NgonNguLapTrinhJava.MiniSearchEngine;
 
+import java.util.Arrays;
 import java.util.List;
 
 import org.springframework.boot.CommandLineRunner;
@@ -27,23 +28,10 @@ public class MiniSearchEngineApplication {
             String indexPath = "lucene-index";
 
             Indexer loadedIndexer = new Indexer();
+            System.out.println("Building index...");
 
-            if (!IndexPersistence.indexExists(indexPath)) {
-
-                System.out.println("Index not found. Building...");
-
-                loadedIndexer.buildFromDirectory("data/");
-                loadedIndexer.saveIndex(indexPath);
-
-            } else {
-
-                System.out.println("Index already exists. Loading...");
-
-                loadedIndexer.loadIndex(indexPath);
-            }
-
-            System.out.println("Ready.");
-           
+            loadedIndexer.buildFromDirectory("data/");
+            loadedIndexer.saveIndex(indexPath);
 
             System.out.println("\n========== ANALYZE QUERY TEST ==========");
 
@@ -56,30 +44,24 @@ public class MiniSearchEngineApplication {
             System.out.println("\n========== POSTINGS TEST ==========");
 
             String[] testTerms = {
-                    "bánh",
-                    "bò",
                     "chó",
-                    "chim",
-                    "game",
-                    "blockchain"
+                    "bệnh",
             };
+            Arrays.stream(testTerms)
+                    .forEach(term -> {
 
-            for (String term : testTerms) {
+                        List<Posting> postings = loadedIndexer.getPostingsForTerm(term);
 
-                List<Posting> postings = loadedIndexer.getPostingsForTerm(term);
+                        System.out.println("\nTERM: '" + term + "'");
+                        System.out.println("DF = "
+                                + loadedIndexer.getDocumentFrequency(term));
 
-                System.out.println("\nTERM: '" + term + "'");
-                System.out.println("DF = "
-                        + loadedIndexer.getDocumentFrequency(term));
+                        System.out.println("Postings count = "
+                                + postings.size());
 
-                System.out.println("Postings count = "
-                        + postings.size());
-
-                // In thử vài posting đầu
-                postings.stream()
-                        .limit(3)
-                        .forEach(System.out::println);
-            }
+                        postings.stream()
+                                .forEach(System.out::println);
+                    });
 
             System.out.println("\n========== GLOBAL STATISTICS ==========");
 
@@ -91,7 +73,7 @@ public class MiniSearchEngineApplication {
 
             System.out.println("\n========== DOCUMENT TEST ==========");
 
-            Long testDocId = 0L;
+            Long testDocId = 271L;
 
             System.out.println("Doc length = "
                     + loadedIndexer.getDocumentLength(testDocId));
