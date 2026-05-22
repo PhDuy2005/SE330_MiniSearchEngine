@@ -12,14 +12,12 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 @Entity
 @Table(name = "documents")
 @Getter
 @Setter
-@NoArgsConstructor
 @AllArgsConstructor
 public class Document {
 
@@ -28,7 +26,7 @@ public class Document {
     private Long id;
 
     @Column(name = "url", columnDefinition = "TEXT", nullable = false, unique = true)
-    private String url;
+    private String link;
 
     @Column(name = "title", columnDefinition = "TEXT", nullable = false)
     private String title;
@@ -36,19 +34,30 @@ public class Document {
     @Column(name = "summary", columnDefinition = "TEXT")
     private String summary;
 
-    @Column(name = "domain", length = 50, nullable = false)
-    private String domain;
+    @Column(name = "topic", nullable = false)
+    private String topic;
 
-    @Column(name = "source_name", length = 100)
-    private String sourceName;
-
-    @Column(name = "content_hash", length = 64)
-    private String contentHash;
-
-    @Column(name = "indexed_at")
-    private LocalDateTime indexedAt;
+    @Column(name = "content", columnDefinition = "TEXT", nullable = false)
+    private String content;
 
     @CreationTimestamp
-    @Column(name = "created_at", updatable = false)
+    @Column(name = "crawledAt", updatable = false)
     private LocalDateTime createdAt;
+
+    public Document() {}
+
+    public Long getId()                { return id; }
+    public void setId(Long id)         { this.id = id; }
+    public String getLink()             { return link; }
+    public String getTitle()           { return title; }
+    public String getSummary()         { return summary; }
+    public String getTopic()          { return topic; }
+    public LocalDateTime getCreatedAt(){ return createdAt; }
+
+    public String getFullText() {
+        StringBuilder sb = new StringBuilder();
+        if (title != null)   sb.append(title).append(" ");
+        if (content != null) sb.append(content);
+        return sb.toString();
+    }
 }
