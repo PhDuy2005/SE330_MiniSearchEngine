@@ -25,7 +25,7 @@ public class Document {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "url", columnDefinition = "TEXT", nullable = false, unique = true)
+    @Column(name = "link", columnDefinition = "TEXT", nullable = false, unique = true)
     private String link;
 
     @Column(name = "title", columnDefinition = "TEXT", nullable = false)

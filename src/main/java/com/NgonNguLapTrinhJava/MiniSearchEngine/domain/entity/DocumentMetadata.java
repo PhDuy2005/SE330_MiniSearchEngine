@@ -22,9 +22,16 @@ public class DocumentMetadata implements Serializable {
 
     public static DocumentMetadata fromDocument(Document doc) {
         String summary = doc.getSummary();
-        String snippet = (summary != null && summary.length() > 160)
-                ? summary.substring(0, 160) + "..."
-                : summary;
+        String content = doc.getContent();
+
+        String snippet;
+        if (summary != null && summary.length() > 160) {
+            snippet = summary.substring(0, 160) + "...";
+        } else if (content != null && content.length() > 160) {
+            snippet = content.substring(0, 160) + "...";
+        } else {
+            snippet = "";
+        }
         return new DocumentMetadata(doc.getId(), doc.getLink(), doc.getTitle(), doc.getTopic(), snippet);
     }
 
