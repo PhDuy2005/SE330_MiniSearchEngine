@@ -15,4 +15,6 @@ public class ResSearchItemDTO {
     String url;
     String summary;
     String content;
+
+    private Double score;
 }

@@ -10,5 +10,10 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @Data
 public class ResSearchListDTO {
+    String query;
+    long totalResults;
+    int page;
+    int size;
+    
     List<ResSearchItemDTO> items;
 }
