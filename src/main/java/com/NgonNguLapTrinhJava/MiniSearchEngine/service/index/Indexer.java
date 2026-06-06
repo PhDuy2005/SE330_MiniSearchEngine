@@ -8,6 +8,7 @@ import com.NgonNguLapTrinhJava.MiniSearchEngine.util.IndexPersistence;
 import com.NgonNguLapTrinhJava.MiniSearchEngine.util.JsonDocumentLoader;
 import com.NgonNguLapTrinhJava.MiniSearchEngine.util.VietnameseAnalyzer;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -71,21 +72,32 @@ public class Indexer implements IndexedDataRepository {
     /**
      * Index một document đơn lẻ vào InvertedIndex.
      */
-    private void indexDocument(Document doc) {
-        // Lưu metadata để Search hiển thị kết quả
-        invertedIndex.addDocumentMetadata(DocumentMetadata.fromDocument(doc));
+    // Trong Indexer.indexDocument()
+private void indexDocument(Document doc) {
+    invertedIndex.addDocumentMetadata(DocumentMetadata.fromDocument(doc));
 
-        // Analyze text: title + content → danh sách token
-        List<String> tokens = analyzer.analyze(doc.getFullText());
+    // Title có trọng số cao hơn → repeat 3 lần
+    List<String> titleTokens   = analyzer.analyze(repeat(doc.getTitle(), 3));
+    // Summary trọng số trung bình → repeat 1 lần
+    List<String> summaryTokens = analyzer.analyze(repeat(doc.getSummary(), 1));
+    // Content bình thường
+    List<String> contentTokens = analyzer.analyze(doc.getContent());
 
-        // Ghi nhận độ dài document vào statistics
-        statistics.recordDocument(doc.getId(), tokens.size());
+    List<String> allTokens = new ArrayList<>();
+    allTokens.addAll(titleTokens);
+    allTokens.addAll(summaryTokens);
+    allTokens.addAll(contentTokens);
 
-        // Thêm từng token vào inverted index kèm vị trí
-        for (int pos = 0; pos < tokens.size(); pos++) {
-            invertedIndex.addTerm(tokens.get(pos), doc.getId(), pos);
-        }
+    statistics.recordDocument(doc.getId(), allTokens.size());
+    for (int pos = 0; pos < allTokens.size(); pos++) {
+        invertedIndex.addTerm(allTokens.get(pos), doc.getId(), pos);
     }
+}
+
+private String repeat(String text, int times) {
+    if (text == null) return "";
+    return (text + " ").repeat(times).trim();
+}
 
     // ─── Persistence ────────────────────────────────────────────────────────
 
