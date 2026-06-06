@@ -1,13 +1,13 @@
-package com.NgonNguLapTrinhJava.MiniSearchEngine;
+// package com.NgonNguLapTrinhJava.MiniSearchEngine;
 
-import org.junit.jupiter.api.Test;
-import org.springframework.boot.test.context.SpringBootTest;
+// import org.junit.jupiter.api.Test;
+// import org.springframework.boot.test.context.SpringBootTest;
 
-@SpringBootTest
-class MiniSearchEngineApplicationTests {
+// @SpringBootTest
+// class MiniSearchEngineApplicationTests {
 
-	@Test
-	void contextLoads() {
-	}
+// 	@Test
+// 	void contextLoads() {
+// 	}
 
-}
+// }

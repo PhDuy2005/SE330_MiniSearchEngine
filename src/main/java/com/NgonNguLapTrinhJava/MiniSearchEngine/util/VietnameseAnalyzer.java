@@ -1,26 +1,11 @@
 package com.NgonNguLapTrinhJava.MiniSearchEngine.util;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import vn.pipeline.VnCoreNLP;
+import vn.pipeline.Annotation;
+import vn.corenlp.tokenizer.Tokenizer;
 
-/**
- * Pipeline phân tích văn bản tiếng Việt.
- *
- * Các bước xử lý:
- * 1. Lowercase
- * 2. Loại bỏ ký tự đặc biệt / số không cần thiết
- * 3. Tokenize theo khoảng trắng
- * 4. Stopwords removal
- * 5. Loại bỏ token quá ngắn (< 2 ký tự)
- *
- * Cải tiến so với bản cơ bản:
- * - Chuẩn hóa Unicode (xử lý ký tự tiếng Việt tổ hợp)
- * - Stopwords list đầy đủ hơn cho tiếng Việt
- * - Lọc token số thuần túy (không có giá trị tìm kiếm)
- */
+import java.util.*;
+
 public class VietnameseAnalyzer {
 
     private static final Set<String> STOPWORDS = new HashSet<>(Arrays.asList(
@@ -29,67 +14,129 @@ public class VietnameseAnalyzer {
             "của", "cho", "với", "từ", "đến", "tới", "về", "trong", "ngoài", "trên",
             "dưới", "sau", "trước", "giữa", "bên", "tại", "ở", "ra", "vào", "lên",
             "xuống", "qua", "theo", "bởi", "do", "như", "khi", "lúc", "mỗi",
-
             // Đại từ, từ chỉ định
             "tôi", "bạn", "họ", "chúng", "mình", "này", "đó", "kia", "ấy", "đây",
             "đấy", "đâu", "ai", "gì", "nào", "sao", "thế", "vậy",
-
             // Động từ trạng thái / hỗ trợ
-            "có", "không", "được", "bị", "hãy", "đã", "đang", "sẽ", "vẫn", "còn",
-            "rồi", "cũng", "đều", "chỉ", "thôi", "cả", "mới", "lại", "cần", "phải",
-
+            // Bỏ "có", "không" vì có thể mang nghĩa trong cụm từ
+            "bị", "hãy", "đã", "đang", "sẽ", "vẫn", "còn",
+            "rồi", "cũng", "đều", "chỉ", "thôi", "cả", "phải",
             // Trạng từ mức độ
-            "rất", "quá", "khá", "hơi", "thật", "lắm", "nhiều", "ít", "một",
+            "rất", "quá", "khá", "hơi", "thật", "lắm",
+            // Web artifacts
+            "http", "https", "www", "com", "vn"));
 
-            // Từ số đếm thường gặp trong công thức nhưng không có giá trị index
-            "gram", "ml", "lít", "kg", "cm", "mm",
+    private VnCoreNLP pipeline;
+    private boolean vnCoreAvailable = false;
 
-            // Các từ HTML / web bị sót
-            "http", "https", "www", "com", "vn"
-    ));
+    public VietnameseAnalyzer() {
+        try {
+            String modelDir = extractModelsToTempDir();
 
-    /**
-     * Phân tích văn bản thô, trả về danh sách token đã chuẩn hóa.
-     *
-     * @param text văn bản thô (title + content)
-     * @return danh sách token sạch
-     */
+            // Set system property để VnCoreNLP tìm model đúng chỗ
+            System.setProperty("user.dir", modelDir);
+
+            String[] annotators = { "wseg" };
+            this.pipeline = new VnCoreNLP(annotators);
+            this.vnCoreAvailable = true;
+            System.out.println("[VietnameseAnalyzer] VnCoreNLP loaded.");
+        } catch (Exception e) {
+            System.err.println("[VietnameseAnalyzer] Fallback: " + e.getMessage());
+            this.vnCoreAvailable = false;
+        }
+    }
+
+    private String extractModelsToTempDir() throws Exception {
+        String tempDir = System.getProperty("java.io.tmpdir") + "/vncorenlp";
+        String modelPath = tempDir + "/models/wordsegmenter";
+        new java.io.File(modelPath).mkdirs();
+
+        for (String file : List.of("vi-vocab", "wordsegmenter.rdr")) {
+            java.io.File dest = new java.io.File(modelPath + "/" + file);
+            if (!dest.exists()) {
+                try (var in = getClass().getResourceAsStream(
+                        "/vncorenlp/models/wordsegmenter/" + file)) {
+                    if (in == null)
+                        throw new Exception("Model file not found in classpath: " + file);
+                    java.nio.file.Files.copy(in, dest.toPath());
+                }
+            }
+        }
+        System.out.println("[VietnameseAnalyzer] Models extracted to: " + tempDir);
+        return tempDir;
+    }
+
     public List<String> analyze(String text) {
-        if (text == null || text.isBlank()) return new ArrayList<>();
+        if (text == null || text.isBlank())
+            return new ArrayList<>();
 
-        // Bước 1: Lowercase
+        return vnCoreAvailable
+                ? analyzeWithVnCore(text)
+                : analyzeWithFallback(text);
+    }
+
+    // ─── VnCoreNLP path ──────────────────────────────────────────────────────
+
+    private List<String> analyzeWithVnCore(String text) {
+        try {
+            Annotation annotation = new Annotation(text.toLowerCase());
+            pipeline.annotate(annotation);
+
+            List<String> tokens = new ArrayList<>();
+
+            // getSentences() → List<Sentence>
+            // sentence.getWords() → List<Word> ← đây là chỗ sai trước
+            for (vn.pipeline.Sentence sentence : annotation.getSentences()) {
+                for (vn.pipeline.Word word : sentence.getWords()) {
+                    String token = word.getForm(); // "thủ_tướng", "học_sinh"
+                    if (shouldSkip(token))
+                        continue;
+                    tokens.add(token);
+                }
+            }
+            return tokens;
+
+        } catch (Exception e) {
+            System.err.println("[VietnameseAnalyzer] VnCore failed, fallback: " + e.getMessage());
+            return analyzeWithFallback(text);
+        }
+    }
+
+    // ─── Fallback path (whitespace tokenizer) ────────────────────────────────
+
+    private List<String> analyzeWithFallback(String text) {
         String lower = text.toLowerCase();
+        String cleaned = lower.replaceAll("[^\\p{L}\\s]", " ");
 
-        // Bước 2: Chuẩn hóa - thay ký tự đặc biệt bằng khoảng trắng
-        // Giữ lại chữ cái Latin, chữ Việt (Unicode), khoảng trắng
-        // String cleaned = lower.replaceAll("[^a-zàáâãèéêìíòóôõùúýăđơưạảấầẩẫậắằẳẵặẹẻẽếềểễệỉịọỏốồổỗộớờởỡợụủứừửữựỳỷỹỵ\\s]", " ");
-String cleaned = lower.replaceAll("[^\\p{L}\\s]", " ");
-
-        // Bước 3: Tokenize theo khoảng trắng
-        String[] rawTokens = cleaned.trim().split("\\s+");
-
-        // Bước 4 & 5: Lọc stopwords và token quá ngắn
         List<String> tokens = new ArrayList<>();
-        for (String token : rawTokens) {
-            if (token.length() < 2) continue;
-            if (STOPWORDS.contains(token)) continue;
+        for (String token : cleaned.trim().split("\\s+")) {
+            if (shouldSkip(token))
+                continue;
             tokens.add(token);
         }
-
         return tokens;
     }
 
-    /**
-     * Kiểm tra một từ có phải stopword không (dùng cho debug/test).
-     */
+    // ─── Shared filter ───────────────────────────────────────────────────────
+
+    private boolean shouldSkip(String token) {
+        if (token == null || token.length() < 2)
+            return true;
+        if (STOPWORDS.contains(token))
+            return true;
+        // Bỏ token toàn số (năm 2024 → "2024" không có giá trị search)
+        if (token.matches("\\d+"))
+            return true;
+        return false;
+    }
+
+    // ─── Debug helpers ───────────────────────────────────────────────────────
+
     public boolean isStopword(String word) {
         return STOPWORDS.contains(word.toLowerCase());
     }
 
-    /**
-     * Lấy toàn bộ danh sách stopwords (dùng cho test).
-     */
-    public Set<String> getStopwords() {
-        return new HashSet<>(STOPWORDS);
+    public boolean isVnCoreAvailable() {
+        return vnCoreAvailable;
     }
 }

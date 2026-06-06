@@ -15,6 +15,7 @@ java {
 
 repositories {
 	mavenCentral()
+	maven { url = uri("https://jitpack.io") }
 }
 
 dependencies {
@@ -27,6 +28,8 @@ dependencies {
 	implementation("org.apache.lucene:lucene-queryparser:9.10.0")
 
 	implementation("org.apache.lucene:lucene-analysis-common:9.10.0")
+
+  implementation("com.github.vncorenlp:VnCoreNLP:1.1.1")
 
 	compileOnly("org.projectlombok:lombok")
 	runtimeOnly("org.postgresql:postgresql")
