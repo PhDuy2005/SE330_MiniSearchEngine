@@ -18,6 +18,20 @@ repositories {
 	maven { url = uri("https://jitpack.io") }
 }
 
+val vnCoreNlpRaw by configurations.creating {
+	isTransitive = false
+}
+
+val cleanVnCoreNlpJar by tasks.registering(Jar::class) {
+	from({ zipTree(vnCoreNlpRaw.singleFile) }) {
+		exclude("org/slf4j/**")
+	}
+
+	archiveBaseName.set("VnCoreNLP-clean")
+	archiveVersion.set("1.1.1")
+	destinationDirectory.set(layout.buildDirectory.dir("libs"))
+}
+
 dependencies {
 	implementation("org.springframework.boot:spring-boot-starter-actuator")
 	implementation("org.springframework.boot:spring-boot-starter-data-jpa")
@@ -29,7 +43,8 @@ dependencies {
 
 	implementation("org.apache.lucene:lucene-analysis-common:9.10.0")
 
-  implementation("com.github.vncorenlp:VnCoreNLP:1.1.1")
+	vnCoreNlpRaw("com.github.vncorenlp:VnCoreNLP:1.1.1")
+	implementation(files(cleanVnCoreNlpJar.map { it.archiveFile }))
 
 	compileOnly("org.projectlombok:lombok")
 	runtimeOnly("org.postgresql:postgresql")
@@ -44,4 +59,16 @@ dependencies {
 
 tasks.withType<Test> {
 	useJUnitPlatform()
+}
+
+tasks.named("compileJava") {
+	dependsOn(cleanVnCoreNlpJar)
+}
+
+tasks.named("bootRun") {
+	dependsOn(cleanVnCoreNlpJar)
+}
+
+tasks.named("bootJar") {
+	dependsOn(cleanVnCoreNlpJar)
 }
