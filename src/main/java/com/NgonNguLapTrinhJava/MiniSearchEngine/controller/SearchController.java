@@ -58,9 +58,9 @@ public class SearchController {
 
     @GetMapping("/search")
     public ResponseEntity<ResSearchListDTO> search(
-            @RequestParam String query,
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size
+            @RequestParam(name = "query") String query,
+            @RequestParam(name = "page", defaultValue = "0") int page,
+            @RequestParam(name = "size", defaultValue = "10") int size
     ) {
         ResSearchListDTO result = searchService.search(query, page, size);
         return ResponseEntity.ok(result);
