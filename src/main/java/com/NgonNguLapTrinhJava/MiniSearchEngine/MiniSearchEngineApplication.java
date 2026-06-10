@@ -110,11 +110,22 @@
 //         };
 //     }
 // }
+
 package com.NgonNguLapTrinhJava.MiniSearchEngine;
 
+import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.boot.jdbc.autoconfigure.DataSourceAutoConfiguration;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.event.EventListener;
+import org.springframework.stereotype.Component;
+
+import com.NgonNguLapTrinhJava.MiniSearchEngine.service.index.Indexer;
+
+import lombok.RequiredArgsConstructor;
+
 import org.springframework.boot.hibernate.autoconfigure.HibernateJpaAutoConfiguration;
 
 @SpringBootApplication(exclude = {
@@ -125,5 +136,20 @@ public class MiniSearchEngineApplication {
 
     public static void main(String[] args) {
         SpringApplication.run(MiniSearchEngineApplication.class, args);
+    }
+
+    @Component
+    @RequiredArgsConstructor
+    public class StartupIndexer {
+
+        @EventListener(ApplicationReadyEvent.class)
+        public void init() throws Exception {
+
+            Indexer indexer = new Indexer();
+
+            indexer.buildFromDirectory("data");
+
+            indexer.saveIndex("lucene-index");
+        }
     }
 }

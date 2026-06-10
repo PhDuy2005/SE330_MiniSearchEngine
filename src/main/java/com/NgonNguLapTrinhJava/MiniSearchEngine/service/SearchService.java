@@ -418,6 +418,7 @@ public class SearchService {
         }
 
         List<String> terms = indexedDataRepository.analyzeQuery(query);
+        
         terms = removeQueryStopWords(terms);
 
         Set<String> uniqueTerms = new LinkedHashSet<>(terms);
@@ -431,7 +432,6 @@ public class SearchService {
 
         for (String term : uniqueTerms) {
             List<Posting> postings = indexedDataRepository.getPostingsForTerm(term);
-
             if (postings == null || postings.isEmpty()) {
                 continue;
             }
