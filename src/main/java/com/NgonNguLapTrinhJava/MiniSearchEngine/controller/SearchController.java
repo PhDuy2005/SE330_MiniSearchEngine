@@ -42,11 +42,17 @@
 // }
 package com.NgonNguLapTrinhJava.MiniSearchEngine.controller;
 
+import com.NgonNguLapTrinhJava.MiniSearchEngine.domain.requestDTO.ReqSearchHistoryDTO;
+import com.NgonNguLapTrinhJava.MiniSearchEngine.domain.responseDTO.ResSearchHistoryItemDTO;
+import com.NgonNguLapTrinhJava.MiniSearchEngine.domain.responseDTO.ResSearchHistoryListDTO;
 import com.NgonNguLapTrinhJava.MiniSearchEngine.domain.responseDTO.ResSearchListDTO;
+import com.NgonNguLapTrinhJava.MiniSearchEngine.service.SearchHistoryService;
 import com.NgonNguLapTrinhJava.MiniSearchEngine.service.SearchService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -55,6 +61,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class SearchController {
 
     private final SearchService searchService;
+    private final SearchHistoryService searchHistoryService;
 
     @GetMapping("/search")
     public ResponseEntity<ResSearchListDTO> search(
@@ -63,6 +70,23 @@ public class SearchController {
             @RequestParam(name = "size", defaultValue = "10") int size
     ) {
         ResSearchListDTO result = searchService.search(query, page, size);
+        return ResponseEntity.ok(result);
+    }
+
+    @PostMapping("/search/history")
+    public ResponseEntity<ResSearchHistoryItemDTO> createSearchHistory(
+            @RequestBody ReqSearchHistoryDTO request
+    ) {
+        ResSearchHistoryItemDTO result = searchHistoryService.create(request);
+        return ResponseEntity.ok(result);
+    }
+
+    @GetMapping("/search/history")
+    public ResponseEntity<ResSearchHistoryListDTO> getSearchHistory(
+            @RequestParam(name = "page", defaultValue = "0") int page,
+            @RequestParam(name = "size", defaultValue = "10") int size
+    ) {
+        ResSearchHistoryListDTO result = searchHistoryService.getHistory(page, size);
         return ResponseEntity.ok(result);
     }
 
