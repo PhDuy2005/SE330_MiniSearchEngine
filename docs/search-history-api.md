@@ -1,6 +1,6 @@
 # Search History API
 
-Tai lieu nay mo ta API luu va lay lich su tim kiem cho FE.
+Tài liệu này mô tả API lưu và lấy lịch sử tìm kiếm cho phía FE.
 
 ## Base URL
 
@@ -8,11 +8,11 @@ Tai lieu nay mo ta API luu va lay lich su tim kiem cho FE.
 http://localhost:8080
 ```
 
-Neu BE chay port/domain khac, FE thay base URL tuong ung.
+Nếu BE chạy bằng port hoặc domain khác, FE thay `base URL` tương ứng theo môi trường.
 
-## Response Wrapper
+## Định Dạng Response
 
-Tat ca response thanh cong dang object JSON duoc boc theo format:
+Tất cả response thành công dạng object JSON sẽ được bọc theo format:
 
 ```json
 {
@@ -23,27 +23,27 @@ Tat ca response thanh cong dang object JSON duoc boc theo format:
 }
 ```
 
-Khi dung du lieu, FE lay payload chinh trong field `data`.
+Khi sử dụng dữ liệu, FE lấy payload chính trong field `data`.
 
 ## Enum
 
-Field `type` co 2 gia tri:
+Field `type` có 2 giá trị:
 
-| Value | Y nghia |
+| Giá trị | Ý nghĩa |
 | --- | --- |
-| `QUERY` | User tim kiem bang tu khoa |
-| `URL` | User click/truy cap vao mot ket qua/link |
+| `QUERY` | User tìm kiếm bằng từ khóa |
+| `URL` | User click hoặc truy cập vào một kết quả/link |
 
-## 1. Luu Search History
+## 1. Lưu Search History
 
 ```http
 POST /search/history
 Content-Type: application/json
 ```
 
-### Luu history loai QUERY
+### Lưu lịch sử loại QUERY
 
-Dung khi user submit tu khoa tim kiem.
+Dùng khi user submit từ khóa tìm kiếm.
 
 Request:
 
@@ -72,16 +72,16 @@ Response:
 }
 ```
 
-### Luu history loai URL
+### Lưu lịch sử loại URL
 
-Dung khi user click/truy cap vao mot link ket qua.
+Dùng khi user click hoặc truy cập vào một link kết quả.
 
 Request:
 
 ```json
 {
   "type": "URL",
-  "title": "Bai viet y te",
+  "title": "Bài viết y tế",
   "url": "https://example.com/medical"
 }
 ```
@@ -98,23 +98,23 @@ Response:
     "type": "URL",
     "visitedAt": "2026-06-13T09:24:25.022",
     "query": null,
-    "title": "Bai viet y te",
+    "title": "Bài viết y tế",
     "url": "https://example.com/medical"
   }
 }
 ```
 
-### Validation
+### Quy Tắc Validation
 
-| Truong hop | Bat buoc |
+| Trường hợp | Bắt buộc |
 | --- | --- |
-| `type = QUERY` | `query` khong duoc rong |
-| `type = URL` | `title` va `url` khong duoc rong |
-| Moi request | `type` bat buoc co |
+| `type = QUERY` | `query` không được rỗng |
+| `type = URL` | `title` và `url` không được rỗng |
+| Mọi request | `type` bắt buộc có |
 
-Neu sai validation, BE tra HTTP `400`.
+Nếu sai validation, BE trả HTTP `400`.
 
-Vi du response loi:
+Ví dụ response lỗi:
 
 ```json
 {
@@ -125,7 +125,7 @@ Vi du response loi:
 }
 ```
 
-## 2. Lay Search History
+## 2. Lấy Search History
 
 ```http
 GET /search/history?page=0&size=10
@@ -133,10 +133,10 @@ GET /search/history?page=0&size=10
 
 Query params:
 
-| Param | Type | Default | Ghi chu |
+| Param | Kiểu dữ liệu | Mặc định | Ghi chú |
 | --- | --- | --- | --- |
-| `page` | number | `0` | Bat dau tu 0 |
-| `size` | number | `10` | So item moi page |
+| `page` | number | `0` | Bắt đầu từ `0` |
+| `size` | number | `10` | Số item mỗi page |
 
 Response:
 
@@ -156,7 +156,7 @@ Response:
         "type": "URL",
         "visitedAt": "2026-06-13T09:24:25.022",
         "query": null,
-        "title": "Bai viet y te",
+        "title": "Bài viết y tế",
         "url": "https://example.com/medical"
       },
       {
@@ -172,11 +172,11 @@ Response:
 }
 ```
 
-Ket qua duoc sap xep moi nhat truoc theo `visitedAt DESC`.
+Kết quả được sắp xếp mới nhất trước theo `visitedAt DESC`.
 
-## FE Mapping Goi Y
+## Gợi Ý Mapping Cho FE
 
-FE co the map moi item ve shape dang dung:
+FE có thể map mỗi item về shape đang dùng:
 
 ```ts
 type SearchHistoryType = "QUERY" | "URL";
@@ -191,7 +191,7 @@ type SearchHistoryItem = {
 };
 ```
 
-Hien thi:
+Hiển thị label:
 
 ```ts
 const label =
@@ -204,17 +204,17 @@ Khi click item:
 
 ```ts
 if (item.type === "QUERY") {
-  // fill search box bang item.query va goi API /search
+  // Fill search box bằng item.query và gọi API /search
 }
 
 if (item.type === "URL") {
-  // open item.url
+  // Mở item.url
 }
 ```
 
-## Fetch Examples
+## Ví Dụ Fetch
 
-### Save QUERY
+### Lưu QUERY
 
 ```ts
 await fetch(`${BASE_URL}/search/history`, {
@@ -229,7 +229,7 @@ await fetch(`${BASE_URL}/search/history`, {
 });
 ```
 
-### Save URL
+### Lưu URL
 
 ```ts
 await fetch(`${BASE_URL}/search/history`, {
@@ -245,7 +245,7 @@ await fetch(`${BASE_URL}/search/history`, {
 });
 ```
 
-### Get History
+### Lấy History
 
 ```ts
 const res = await fetch(`${BASE_URL}/search/history?page=0&size=10`);
