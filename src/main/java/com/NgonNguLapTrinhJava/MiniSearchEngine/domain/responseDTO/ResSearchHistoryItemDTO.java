@@ -13,6 +13,7 @@ import lombok.NoArgsConstructor;
 @Data
 public class ResSearchHistoryItemDTO {
     private Long id;
+    private Long userId;
     private SearchHistoryType type;
     private LocalDateTime visitedAt;
     private String query;

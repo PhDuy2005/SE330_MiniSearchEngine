@@ -63,3 +63,5 @@ out/
 # Chặn toàn bộ thư mục output sinh ra khi chạy index
 output/
 lucene-index/
+
+boilerplate/
