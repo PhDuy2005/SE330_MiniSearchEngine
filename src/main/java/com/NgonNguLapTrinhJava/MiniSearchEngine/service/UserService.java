@@ -47,16 +47,13 @@ public class UserService {
         }
 
         String email = normalizeEmail(request.getEmail());
-        if (userRepository.existsByEmail(email)) {
-            throw new BusinessException(HttpStatus.CONFLICT, "Email already exists");
-        }
-
-        User user = new User();
+        User user = userRepository.findByEmail(email).orElseGet(User::new);
         user.setName(request.getName().trim());
         user.setEmail(email);
         user.setPassword(passwordEncoder.encode(request.getPassword()));
         user.setAccountStatus(ACCOUNT_STATUS_PENDING_VERIFICATION);
         user.setFailedLoginAttempts(0);
+        user.setRefreshToken(null);
 
         String otp = assignNewRegistrationOtp(user);
         User savedUser = userRepository.save(user);
