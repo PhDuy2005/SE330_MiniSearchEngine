@@ -1,16 +1,18 @@
 package com.NgonNguLapTrinhJava.MiniSearchEngine.service;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpStatus;
 import org.springframework.mail.MailException;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
-
-import com.NgonNguLapTrinhJava.MiniSearchEngine.util.annotation.BusinessException;
 
 @Service
 public class EmailService {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(EmailService.class);
 
     private final JavaMailSender mailSender;
     private final String mailFrom;
@@ -20,6 +22,7 @@ public class EmailService {
         this.mailFrom = mailFrom;
     }
 
+    @Async("mailTaskExecutor")
     public void sendRegistrationOtp(String to, String name, String otp) {
         SimpleMailMessage message = new SimpleMailMessage();
         message.setFrom(mailFrom);
@@ -30,7 +33,7 @@ public class EmailService {
         try {
             mailSender.send(message);
         } catch (MailException ex) {
-            throw new BusinessException(HttpStatus.INTERNAL_SERVER_ERROR, "Cannot send OTP email");
+            LOGGER.error("Failed to send registration OTP email to {}", to, ex);
         }
     }
 
