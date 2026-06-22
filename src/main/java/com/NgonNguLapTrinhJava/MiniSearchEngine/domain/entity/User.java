@@ -55,6 +55,12 @@ public class User {
     @Column(name = "refresh_token", columnDefinition = "TEXT")
     private String refreshToken;
 
+    @Column(name = "email_verification_otp", columnDefinition = "TEXT")
+    private String emailVerificationOtp;
+
+    @Column(name = "email_verification_otp_expires_at")
+    private LocalDateTime emailVerificationOtpExpiresAt;
+
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;

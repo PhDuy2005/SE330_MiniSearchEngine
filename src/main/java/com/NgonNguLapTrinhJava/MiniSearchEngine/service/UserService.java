@@ -1,5 +1,6 @@
 package com.NgonNguLapTrinhJava.MiniSearchEngine.service;
 
+import java.time.LocalDateTime;
 import java.util.Optional;
 
 import org.springframework.beans.factory.ObjectProvider;
@@ -11,7 +12,9 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.annotation.Validated;
 
 import com.NgonNguLapTrinhJava.MiniSearchEngine.domain.entity.User;
+import com.NgonNguLapTrinhJava.MiniSearchEngine.domain.requestDTO.ReqResendOtpDTO;
 import com.NgonNguLapTrinhJava.MiniSearchEngine.domain.requestDTO.ReqRegisterDTO;
+import com.NgonNguLapTrinhJava.MiniSearchEngine.domain.requestDTO.ReqVerifyOtpDTO;
 import com.NgonNguLapTrinhJava.MiniSearchEngine.domain.responseDTO.ResLoginDTO;
 import com.NgonNguLapTrinhJava.MiniSearchEngine.domain.responseDTO.ResUserDTO;
 import com.NgonNguLapTrinhJava.MiniSearchEngine.repository.UserRepository;
@@ -21,12 +24,20 @@ import com.NgonNguLapTrinhJava.MiniSearchEngine.util.annotation.BusinessExceptio
 @Validated
 public class UserService {
 
+    private static final String ACCOUNT_STATUS_ACTIVE = "ACTIVE";
+    private static final String ACCOUNT_STATUS_PENDING_VERIFICATION = "PENDING_VERIFICATION";
+
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+    private final EmailService emailService;
+    private final OtpService otpService;
 
-    public UserService(UserRepository userRepository, ObjectProvider<PasswordEncoder> passwordEncoderProvider) {
+    public UserService(UserRepository userRepository, ObjectProvider<PasswordEncoder> passwordEncoderProvider,
+            EmailService emailService, OtpService otpService) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoderProvider.getIfAvailable(BCryptPasswordEncoder::new);
+        this.emailService = emailService;
+        this.otpService = otpService;
     }
 
     @Transactional
@@ -44,10 +55,65 @@ public class UserService {
         user.setName(request.getName().trim());
         user.setEmail(email);
         user.setPassword(passwordEncoder.encode(request.getPassword()));
-        user.setAccountStatus("ACTIVE");
+        user.setAccountStatus(ACCOUNT_STATUS_PENDING_VERIFICATION);
         user.setFailedLoginAttempts(0);
 
+        String otp = assignNewRegistrationOtp(user);
+        User savedUser = userRepository.save(user);
+        emailService.sendRegistrationOtp(savedUser.getEmail(), savedUser.getName(), otp);
+
+        return toUserDTO(savedUser);
+    }
+
+    @Transactional
+    public ResUserDTO verifyRegistrationOtp(ReqVerifyOtpDTO request) {
+        if (request == null) {
+            throw new IllegalArgumentException("Request body is required");
+        }
+
+        User user = findByEmail(request.getEmail())
+                .orElseThrow(() -> new BusinessException(HttpStatus.BAD_REQUEST, "Invalid OTP"));
+
+        if (isActive(user)) {
+            return toUserDTO(user);
+        }
+
+        if (user.getEmailVerificationOtp() == null || user.getEmailVerificationOtpExpiresAt() == null) {
+            throw new BusinessException(HttpStatus.BAD_REQUEST, "OTP is not available. Please request a new OTP");
+        }
+
+        if (user.getEmailVerificationOtpExpiresAt().isBefore(LocalDateTime.now())) {
+            clearRegistrationOtp(user);
+            userRepository.save(user);
+            throw new BusinessException(HttpStatus.BAD_REQUEST, "OTP has expired");
+        }
+
+        if (!otpService.matches(request.getOtp(), user.getEmailVerificationOtp())) {
+            throw new BusinessException(HttpStatus.BAD_REQUEST, "Invalid OTP");
+        }
+
+        user.setAccountStatus(ACCOUNT_STATUS_ACTIVE);
+        clearRegistrationOtp(user);
+
         return toUserDTO(userRepository.save(user));
+    }
+
+    @Transactional
+    public void resendRegistrationOtp(ReqResendOtpDTO request) {
+        if (request == null) {
+            throw new IllegalArgumentException("Request body is required");
+        }
+
+        User user = findByEmail(request.getEmail())
+                .orElseThrow(() -> new BusinessException(HttpStatus.BAD_REQUEST, "Email is not registered"));
+
+        if (isActive(user)) {
+            throw new BusinessException(HttpStatus.CONFLICT, "Account already verified");
+        }
+
+        String otp = assignNewRegistrationOtp(user);
+        User savedUser = userRepository.save(user);
+        emailService.sendRegistrationOtp(savedUser.getEmail(), savedUser.getName(), otp);
     }
 
     @Transactional(readOnly = true)
@@ -134,6 +200,22 @@ public class UserService {
                 .createdAt(user.getCreatedAt())
                 .updatedAt(user.getUpdatedAt())
                 .build();
+    }
+
+    private String assignNewRegistrationOtp(User user) {
+        String otp = otpService.generateOtp();
+        user.setEmailVerificationOtp(otpService.hashOtp(otp));
+        user.setEmailVerificationOtpExpiresAt(otpService.calculateExpirationTime());
+        return otp;
+    }
+
+    private void clearRegistrationOtp(User user) {
+        user.setEmailVerificationOtp(null);
+        user.setEmailVerificationOtpExpiresAt(null);
+    }
+
+    private boolean isActive(User user) {
+        return user != null && ACCOUNT_STATUS_ACTIVE.equalsIgnoreCase(user.getAccountStatus());
     }
 
     private String normalizeEmail(String email) {

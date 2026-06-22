@@ -21,7 +21,9 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.NgonNguLapTrinhJava.MiniSearchEngine.domain.entity.User;
 import com.NgonNguLapTrinhJava.MiniSearchEngine.domain.requestDTO.ReqLoginDTO;
+import com.NgonNguLapTrinhJava.MiniSearchEngine.domain.requestDTO.ReqResendOtpDTO;
 import com.NgonNguLapTrinhJava.MiniSearchEngine.domain.requestDTO.ReqRegisterDTO;
+import com.NgonNguLapTrinhJava.MiniSearchEngine.domain.requestDTO.ReqVerifyOtpDTO;
 import com.NgonNguLapTrinhJava.MiniSearchEngine.domain.responseDTO.ResLoginDTO;
 import com.NgonNguLapTrinhJava.MiniSearchEngine.domain.responseDTO.ResUserDTO;
 import com.NgonNguLapTrinhJava.MiniSearchEngine.service.UserService;
@@ -50,9 +52,22 @@ public class AuthController {
     }
 
     @PostMapping("/register")
-    @ApiMessage("Register user successfully")
+    @ApiMessage("Register user successfully. OTP sent to email")
     public ResponseEntity<ResUserDTO> register(@Valid @RequestBody ReqRegisterDTO request) {
         return ResponseEntity.status(HttpStatus.CREATED).body(userService.register(request));
+    }
+
+    @PostMapping("/verify-otp")
+    @ApiMessage("Verify OTP successfully")
+    public ResponseEntity<ResUserDTO> verifyOtp(@Valid @RequestBody ReqVerifyOtpDTO request) {
+        return ResponseEntity.ok(userService.verifyRegistrationOtp(request));
+    }
+
+    @PostMapping("/resend-otp")
+    @ApiMessage("Resend OTP successfully")
+    public ResponseEntity<Void> resendOtp(@Valid @RequestBody ReqResendOtpDTO request) {
+        userService.resendRegistrationOtp(request);
+        return ResponseEntity.ok().build();
     }
 
     @PostMapping("/login")
