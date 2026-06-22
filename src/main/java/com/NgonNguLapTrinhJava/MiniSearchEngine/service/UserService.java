@@ -76,17 +76,20 @@ public class UserService {
         }
 
         if (user.getEmailVerificationOtp() == null || user.getEmailVerificationOtpExpiresAt() == null) {
-            throw new BusinessException(HttpStatus.BAD_REQUEST, "OTP is not available. Please request a new OTP");
+            throw new BusinessException(HttpStatus.BAD_REQUEST,
+                    "Mã OTP đã hết hạn hoặc chưa được gửi. Vui lòng yêu cầu mã OTP mới.");
         }
 
         if (user.getEmailVerificationOtpExpiresAt().isBefore(LocalDateTime.now())) {
             clearRegistrationOtp(user);
             userRepository.save(user);
-            throw new BusinessException(HttpStatus.BAD_REQUEST, "OTP has expired");
+            throw new BusinessException(HttpStatus.BAD_REQUEST,
+                    "Mã OTP đã hết hạn hoặc chưa được gửi. Vui lòng yêu cầu mã OTP mới.");
         }
 
         if (!otpService.matches(request.getOtp(), user.getEmailVerificationOtp())) {
-            throw new BusinessException(HttpStatus.BAD_REQUEST, "Invalid OTP");
+            throw new BusinessException(HttpStatus.BAD_REQUEST,
+                    "Mã OTP không hợp lệ. Vui lòng thử lại.");
         }
 
         user.setAccountStatus(ACCOUNT_STATUS_ACTIVE);
@@ -102,7 +105,8 @@ public class UserService {
         }
 
         User user = findByEmail(request.getEmail())
-                .orElseThrow(() -> new BusinessException(HttpStatus.BAD_REQUEST, "Email is not registered"));
+                .orElseThrow(() -> new BusinessException(HttpStatus.BAD_REQUEST,
+                        "Email không tồn tại. Vui lòng đăng ký trước khi yêu cầu mã OTP mới."));
 
         if (isActive(user)) {
             throw new BusinessException(HttpStatus.CONFLICT, "Account already verified");
