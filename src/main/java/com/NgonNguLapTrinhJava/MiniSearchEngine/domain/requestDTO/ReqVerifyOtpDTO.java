@@ -12,11 +12,11 @@ import lombok.NoArgsConstructor;
 @Data
 public class ReqVerifyOtpDTO {
 
-    @Email(message = "Email is invalid")
-    @NotBlank(message = "Email is required")
+    @Email(message = "Email không hợp lệ")
+    @NotBlank(message = "Email không được để trống")
     private String email;
 
-    @NotBlank(message = "OTP is required")
-    @Pattern(regexp = "\\d{6}", message = "OTP must be 6 digits")
+    @NotBlank(message = "OTP không được để trống")
+    @Pattern(regexp = "\\d{6}", message = "OTP phải gồm 6 chữ số")
     private String otp;
 }

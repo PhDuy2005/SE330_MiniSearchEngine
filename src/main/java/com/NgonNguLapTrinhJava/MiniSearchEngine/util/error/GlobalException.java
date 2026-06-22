@@ -96,16 +96,16 @@ public class GlobalException {
         restResponse.setStatusCode(HttpStatus.BAD_REQUEST.value());
         if (ex.getMessage().equals("No refresh token provided")) {
             restResponse.setError("401 Unauthorized Exception occurs: Invalid refresh token");
-            restResponse.setMessage(ex.getMessage());
+            restResponse.setMessage("Không tìm thấy refresh token trong yêu cầu");
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(restResponse);
         }
         if (ex.getMessage().equals("Invalid refresh token")) {
             restResponse.setError("401 Unauthorized Exception occurs: Invalid refresh token");
-            restResponse.setMessage(ex.getMessage());
+            restResponse.setMessage("Refresh token đã hết hạn hoặc không đúng");
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(restResponse);
         }
         restResponse.setError("400 Bad Request Exception occurs... Please check your request's header or payload");
-        restResponse.setMessage(ex.getMessage());
+        restResponse.setMessage("Yêu cầu không hợp lệ... Vui lòng kiểm tra lại header hoặc dữ liệu (payload) gửi lên");
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(restResponse);
     }
 
@@ -114,7 +114,7 @@ public class GlobalException {
         RestResponse<Object> restResponse = new RestResponse<>();
         restResponse.setStatusCode(HttpStatus.INTERNAL_SERVER_ERROR.value());
         restResponse.setError("File upload exception occurs...");
-        restResponse.setMessage(ex.getMessage());
+        restResponse.setMessage("Đã xảy ra lỗi trong quá trình tải tệp tin lên hệ thống.");
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(restResponse);
     }
 
@@ -123,7 +123,7 @@ public class GlobalException {
         RestResponse<Object> restResponse = new RestResponse<>();
         restResponse.setStatusCode(HttpStatus.FORBIDDEN.value());
         restResponse.setError("403 Forbidden Exception occurs: Access is denied");
-        restResponse.setMessage(ex.getMessage());
+        restResponse.setMessage("Bạn không có quyền truy cập tài nguyên này.");
         return ResponseEntity.status(HttpStatus.FORBIDDEN).body(restResponse);
     }
 
@@ -132,7 +132,7 @@ public class GlobalException {
         RestResponse<Object> restResponse = new RestResponse<>();
         restResponse.setStatusCode(HttpStatus.NOT_FOUND.value());
         restResponse.setError("Resource not found");
-        restResponse.setMessage(ex.getMessage());
+        restResponse.setMessage("Không tìm thấy tài nguyên.");
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(restResponse);
     }
 
@@ -149,9 +149,9 @@ public class GlobalException {
             // Extract the specific error for enum or type mismatch
             if (message.contains("DayOfWeekEnum")) {
                 restResponse.setMessage(
-                        "Invalid day of week. Allowed values: MONDAY, TUESDAY, WEDNESDAY, THURSDAY, FRIDAY, SATURDAY, SUNDAY");
+                        "Ngày trong tuần không hợp lệ. Các giá trị được chấp nhận bao gồm: MONDAY, TUESDAY, WEDNESDAY, THURSDAY, FRIDAY, SATURDAY, SUNDAY");
             } else {
-                restResponse.setMessage("Invalid data format in request body");
+                restResponse.setMessage("Định dạng dữ liệu trong request body không hợp lệ");
             }
         } else {
             restResponse.setMessage("Malformed JSON request");
@@ -165,7 +165,7 @@ public class GlobalException {
         RestResponse<Object> restResponse = new RestResponse<>();
         restResponse.setStatusCode(HttpStatus.BAD_REQUEST.value());
         restResponse.setError("Invalid URI syntax");
-        restResponse.setMessage(ex.getMessage());
+        restResponse.setMessage("Đường dẫn không hợp lệ.");
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(restResponse);
     }
 
@@ -174,7 +174,7 @@ public class GlobalException {
         RestResponse<Object> restResponse = new RestResponse<>();
         restResponse.setStatusCode(HttpStatus.INTERNAL_SERVER_ERROR.value());
         restResponse.setError("I/O Exception occurred");
-        restResponse.setMessage(ex.getMessage());
+        restResponse.setMessage("Đã xảy ra lỗi trong quá trình xử lý tệp tin.");
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(restResponse);
     }
 }

@@ -47,7 +47,11 @@ public class UserService {
         }
 
         String email = normalizeEmail(request.getEmail());
-        User user = userRepository.findByEmail(email).orElseGet(User::new);
+        if (userRepository.existsByEmail(email)) {
+            throw new BusinessException(HttpStatus.CONFLICT, "Email đã được đăng ký");
+        }
+
+        User user = new User();
         user.setName(request.getName().trim());
         user.setEmail(email);
         user.setPassword(passwordEncoder.encode(request.getPassword()));
@@ -69,7 +73,7 @@ public class UserService {
         }
 
         User user = findByEmail(request.getEmail())
-                .orElseThrow(() -> new BusinessException(HttpStatus.BAD_REQUEST, "Invalid OTP"));
+                .orElseThrow(() -> new BusinessException(HttpStatus.BAD_REQUEST, "Mã OTP không hợp lệ hoặc đã hết hạn"));
 
         if (isActive(user)) {
             return toUserDTO(user);
@@ -83,13 +87,11 @@ public class UserService {
         if (user.getEmailVerificationOtpExpiresAt().isBefore(LocalDateTime.now())) {
             clearRegistrationOtp(user);
             userRepository.save(user);
-            throw new BusinessException(HttpStatus.BAD_REQUEST,
-                    "Mã OTP đã hết hạn hoặc chưa được gửi. Vui lòng yêu cầu mã OTP mới.");
+            throw new BusinessException(HttpStatus.BAD_REQUEST, "Mã OTP không hợp lệ");
         }
 
         if (!otpService.matches(request.getOtp(), user.getEmailVerificationOtp())) {
-            throw new BusinessException(HttpStatus.BAD_REQUEST,
-                    "Mã OTP không hợp lệ. Vui lòng thử lại.");
+            throw new BusinessException(HttpStatus.BAD_REQUEST, "Mã OTP không hợp lệ");
         }
 
         user.setAccountStatus(ACCOUNT_STATUS_ACTIVE);
@@ -109,7 +111,7 @@ public class UserService {
                         "Email không tồn tại. Vui lòng đăng ký trước khi yêu cầu mã OTP mới."));
 
         if (isActive(user)) {
-            throw new BusinessException(HttpStatus.CONFLICT, "Account already verified");
+            throw new BusinessException(HttpStatus.CONFLICT, "Tài khoản đã được xác minh");
         }
 
         String otp = assignNewRegistrationOtp(user);

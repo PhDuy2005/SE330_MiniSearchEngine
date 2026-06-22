@@ -32,23 +32,23 @@ public class User {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @NotBlank(message = "Name is required")
+    @NotBlank(message = "Tên không được để trống")
     @Column(name = "name", nullable = false)
     private String name;
 
-    @Email(message = "Email is invalid")
-    @NotBlank(message = "Email is required")
+    @Email(message = "Email không hợp lệ")
+    @NotBlank(message = "Email không được để trống")
     @Column(name = "email", nullable = false, unique = true)
     private String email;
 
-    @NotBlank(message = "Password is required")
+    @NotBlank(message = "Mật khẩu không được để trống")
     @Column(name = "password", nullable = false)
     private String password;
 
     @Column(name = "account_status", nullable = false, length = 20)
     private String accountStatus = "ACTIVE";
 
-    @Min(value = 0, message = "Failed login attempts must be greater than or equal to 0")
+    @Min(value = 0, message = "Số lần đăng nhập thất bại phải lớn hơn hoặc bằng 0")
     @Column(name = "failed_login_attempts", nullable = false)
     private Integer failedLoginAttempts = 0;
 

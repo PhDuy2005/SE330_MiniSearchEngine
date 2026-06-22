@@ -52,38 +52,38 @@ public class AuthController {
     }
 
     @PostMapping("/register")
-    @ApiMessage("Register user successfully. OTP sent to email")
+    @ApiMessage("Đăng ký thành công. Mã xác thực đã được gửi đến email của bạn.")
     public ResponseEntity<ResUserDTO> register(@Valid @RequestBody ReqRegisterDTO request) {
         return ResponseEntity.status(HttpStatus.CREATED).body(userService.register(request));
     }
 
     @PostMapping("/verify-otp")
-    @ApiMessage("Verify OTP successfully")
+    @ApiMessage("Xác thực OTP thành công")
     public ResponseEntity<ResUserDTO> verifyOtp(@Valid @RequestBody ReqVerifyOtpDTO request) {
         return ResponseEntity.ok(userService.verifyRegistrationOtp(request));
     }
 
     @PostMapping("/resend-otp")
-    @ApiMessage("Resend OTP successfully")
+    @ApiMessage("Gửi lại OTP thành công")
     public ResponseEntity<Void> resendOtp(@Valid @RequestBody ReqResendOtpDTO request) {
         userService.resendRegistrationOtp(request);
         return ResponseEntity.ok().build();
     }
 
     @PostMapping("/login")
-    @ApiMessage("Login successfully")
+    @ApiMessage("Đăng nhập thành công")
     public ResponseEntity<ResLoginDTO> login(@Valid @RequestBody ReqLoginDTO request) {
         try {
             Authentication authentication = authenticationManager.authenticate(
                     new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword()));
             SecurityContextHolder.getContext().setAuthentication(authentication);
         } catch (AuthenticationException ex) {
-            throw new BusinessException(HttpStatus.UNAUTHORIZED, "Invalid email or password");
+            throw new BusinessException(HttpStatus.UNAUTHORIZED, "Sai tài khoản hoặc mật khẩu");
         }
 
         User currentUser = userService.handleFindByEmail(request.getEmail());
         if (currentUser == null) {
-            throw new BusinessException(HttpStatus.UNAUTHORIZED, "Invalid email or password");
+            throw new BusinessException(HttpStatus.UNAUTHORIZED, "Sai tài khoản hoặc mật khẩu");
         }
 
         ResLoginDTO response = userService.toLoginDTO(currentUser);
@@ -99,19 +99,19 @@ public class AuthController {
     }
 
     @GetMapping("/account")
-    @ApiMessage("Get account successfully")
+    @ApiMessage("Lấy thông tin tài khoản thành công")
     public ResponseEntity<ResLoginDTO.UserGetAccount> getAccount() {
         String email = SecurityUtil.getCurrentUserLogin()
-                .orElseThrow(() -> new BusinessException(HttpStatus.UNAUTHORIZED, "User is not authenticated"));
+                .orElseThrow(() -> new BusinessException(HttpStatus.UNAUTHORIZED, "Người dùng chưa xác thực"));
         User currentUser = userService.handleFindByEmail(email);
         if (currentUser == null) {
-            throw new BusinessException(HttpStatus.UNAUTHORIZED, "User is not authenticated");
+            throw new BusinessException(HttpStatus.UNAUTHORIZED, "Người dùng chưa xác thực");
         }
         return ResponseEntity.ok(userService.toAccountDTO(currentUser));
     }
 
     @GetMapping("/refresh")
-    @ApiMessage("Refresh token successfully")
+    @ApiMessage("Làm mới token thành công")
     public ResponseEntity<ResLoginDTO> refreshToken(
             @CookieValue(name = "refresh_token", required = false) String refreshToken) throws BadRequestException {
         if (refreshToken == null || refreshToken.isBlank()) {

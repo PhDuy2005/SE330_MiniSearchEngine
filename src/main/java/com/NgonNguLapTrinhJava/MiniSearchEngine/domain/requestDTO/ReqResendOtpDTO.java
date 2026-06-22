@@ -11,7 +11,7 @@ import lombok.NoArgsConstructor;
 @Data
 public class ReqResendOtpDTO {
 
-    @Email(message = "Email is invalid")
-    @NotBlank(message = "Email is required")
+    @Email(message = "Email không hợp lệ")
+    @NotBlank(message = "Email không được để trống")
     private String email;
 }
