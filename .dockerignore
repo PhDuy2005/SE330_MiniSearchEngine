@@ -1,0 +1,8 @@
+.git
+.gradle
+build
+bin
+out
+lucene-index
+.env
+*.log
